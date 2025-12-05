@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>语法侦探社 第二弹：间谍的秘密习惯</title>
+    <style>
+        /* CSS 样式：保持侦探社的专业与沉稳风格 */
+        body {
+            font-family: 'Microsoft YaHei', 微软雅黑, sans-serif; /* 统一字体为微软雅黑 */
+            font-size: 26px; /* 统一字体大小为 26px */
+            background-color: #f4f4f9;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        header {
+            text-align: center;
+            border-bottom: 2px solid #5d5d81;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #a00; /* 深红，代表悬疑 */
+            font-size: 2.5em;
+        }
+
+        h2 {
+            color: #5d5d81; /* 深蓝紫，代表推理 */
+            font-size: 1.5em;
+            border-bottom: 1px dashed #ccc;
+            padding-bottom: 5px;
+            margin-top: 25px;
+        }
+        
+        h3 {
+            color: #4a4a6b;
+            font-size: 1.2em;
+        }
+
+        .instruction {
+            background-color: #e6e6fa; /* 淡紫，代表提示 */
+            padding: 15px;
+            border-left: 5px solid #5d5d81;
+            margin-bottom: 20px;
+        }
+
+        .option-box, .input-feedback {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s, border-color 0.3s;
+            border-radius: 5px; 
+            position: relative; 
+        }
+
+        .button-next {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background-color: #a00;
+            color: white;
+            text-align: center;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin-top: 30px;
+            transition: background-color 0.3s;
+        }
+
+        .button-next:hover {
+            background-color: #800;
+        }
+        
+        /* 语法总结样式 */
+        .grammar-summary {
+            margin-top: 30px;
+            padding: 20px;
+            border: 2px solid #5d5d81;
+            border-radius: 5px;
+            background-color: #fff0f5; 
+        }
+        
+        /* 页面切换控制 */
+        .page {
+            display: none; 
+        }
+        .page.active {
+            display: block; 
+        }
+
+        /* ==================== 秘密文件翻开效果 CSS ==================== */
+        .analysis-box {
+            position: relative; 
+            perspective: 1000px; 
+            cursor: pointer;
+            border: 1px solid #5d5d81; 
+            padding: 15px; 
+            margin-bottom: 15px;
+            background-color: #f7f7ff;
+            border-radius: 5px;
+        }
+
+        /* 秘密文件封面 */
+        .analysis-box::before {
+            content: attr(data-title); 
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #5d5d81; 
+            color: white;
+            font-size: 1.2em;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transform-origin: top; 
+            transition: transform 0.6s ease-in-out;
+            z-index: 10;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3); 
+        }
+
+        /* 文件打开状态 */
+        .analysis-box.opened::before {
+            transform: rotateX(-180deg);
+            opacity: 0; 
+        }
+
+        /* 在文件关闭时，隐藏内容 */
+        .analysis-box > * {
+            transition: opacity 0.6s 0.3s; 
+            opacity: 0;
+        }
+        
+        /* 文件打开时，显示内容 */
+        .analysis-box.opened > * {
+            opacity: 1;
+        }
+        /* ================================================= */
+
+        /* 表格样式 (已优化，避免文字溢出) */
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            table-layout: fixed; /* 优化表格布局，防止宽度溢出 */
+        }
+        .summary-table th, .summary-table td {
+            border: 1px solid #ddd;
+            padding: 8px; /* 减少内边距 */
+            text-align: left;
+            font-size: 0.8em; /* 减小表格内容字体，确保能容纳在单元格内 */
+            word-break: break-word; /* 允许长单词换行 */
+        }
+        .summary-table th {
+            background-color: #5d5d81;
+            color: white;
+            font-size: 0.9em;
+        }
+        .summary-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        
+        /* Page 2/3 样式 */
+        .choice-pair {
+            display: flex;
+            gap: 15px; 
+            margin-top: 10px;
+        }
+        .choice-btn {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 10px;
+            margin: 5px 0;
+            background: #f4f4f9;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            /* === 确保选项字体为 26px 微软雅黑 (1em 继承 body 的 26px) === */
+            font-size: 1em; 
+            font-family: 'Microsoft YaHei', 微软雅黑, sans-serif; 
+        }
+        .choice-btn:hover {
+            background: #e0e0ff;
+        }
+        .choice-btn.correct-answer {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .choice-btn.wrong-answer {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .writing-area textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 1.1em;
+        }
+        .exercise-prompt {
+            background-color: #fff8e1;
+            padding: 15px;
+            border: 2px solid #ffcc00;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        /* ==================== Modal 样式 (新增) ==================== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none; /* Default hidden, controlled by JS */
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: #ffe0b2; /* Light orange for badge/award */
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+            border: 5px solid #ff9800; /* Darker orange border */
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .badge-title {
+            font-size: 1.8em;
+            color: #e65100;
+            margin-bottom: 20px;
+            border-bottom: 2px dashed #ff9800;
+            padding-bottom: 10px;
+        }
+
+        .badge-text {
+            font-size: 1.1em;
+            color: #333;
+            line-height: 1.8;
+        }
+
+        .modal-button {
+            margin-top: 25px;
+            padding: 10px 20px;
+            background-color: #a00;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: background-color 0.3s;
+        }
+
+        .modal-button:hover {
+            background-color: #800;
+        }
+        /* =========================================================== */
+    </style>
+</head>
+<body>
+    <div class="container">
+        
+        <div class="page active" id="page1">
+            <header>
+                <h1>🕵️‍♂️ 语法侦探社 第二弹：语法幽灵的秘密习惯</h1>
+                <p>📌 阶段一：Used to do vs. Be used to doing/Noun 的结构学习</p>
+            </header>
+
+            <p class="instruction">
+                任务背景：你截获了代号“语法幽灵”的间谍留下的加密日记。解密关键在于理解他过去常做和现在习惯的事。请学习以下语法结构。
+            </p>
+
+            <h2>📚 幽灵的行动档案：结构总结</h2>
+            <div class="grammar-summary">
+                <table class="summary-table">
+                    <thead>
+                        <tr>
+                            <th>结构名称</th>
+                            <th>含义/功能</th>
+                            <th>肯定句 (Affirmative)</th>
+                            <th>否定句 (Negative)</th>
+                            <th>疑问句 (Question)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Used to do</strong></td>
+                            <td>过去常常做（现在不再）</td>
+                            <td>S + <strong>used to</strong> + V原</td>
+                            <td>S + <strong>didn't use to</strong> + V原<br>S + <strong>used not to</strong> + V原</td>
+                            <td><strong>Did</strong> + S + <strong>use to</strong> + V原?</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Be used to doing/Noun</strong></td>
+                            <td>习惯于做某事/某物（be 为 am/is/are/was/were）</td>
+                            <td>S + <strong>be used to</strong> + V-ing/N</td>
+                            <td>S + <strong>be not used to</strong> + V-ing/N</td>
+                            <td><strong>Be</strong> + S + <strong>used to</strong> + V-ing/N?</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h2>📝 秘密档案范例 (Used to do)</h2>
+            <div class="analysis-box" data-title="[点击解密] Used to do 档案" onclick="toggleSecretFile(this)">
+                <h3>过去：常在总部工作</h3>
+                <p>肯定：The Ghost <strong>used to work</strong> in the same office building every day. (过去常在)</p>
+                <p>否定：The Ghost <strong>didn't use to carry</strong> a weapon during the day. (过去不常)</p>
+                <p>疑问：<strong>Did</strong> he <strong>use to contact</strong> you via secure phone? (过去常...吗?)</p>
+            </div>
+
+            <h2>📝 秘密档案范例 (Be used to doing/Noun)</h2>
+            <div class="analysis-box" data-title="[点击解密] Be used to doing/Noun 档案" onclick="toggleSecretFile(this)">
+                <h3>现在：习惯于全球旅行/环境</h3>
+                <p>肯定 (V-ing)：Now, he <strong>is used to traveling</strong> across different time zones. (现在习惯于某个动作)</p>
+                <p>肯定 (Noun)：The agent <strong>was used to the silence</strong> of the remote base. (过去习惯于某个名词环境)</p>
+                <p>否定：He <strong>isn't used to working</strong> with a team; he prefers to be a lone wolf. (不习惯于某个动作)</p>
+                <p>疑问：<strong>Are</strong> you <strong>used to living</strong> in the mountains now? (习惯于...吗?)</p>
+            </div>
+
+            <button class="button-next" id="next-page1-v2" onclick="goToPage(2)">
+                ✅ 掌握语法结构，进入第二阶段：线索填空
+            </button>
+        </div>
+
+        <div class="page" id="page2">
+            <header>
+                <h1>🎯 间谍训练：选择填空</h1>
+                <p>📌 阶段二：应用训练 — 迅速判断间谍的行为模式</p>
+            </header>
+
+            <p class="instruction">
+                任务：请为以下句子选择正确的动词形式或短语。注意区分(过去常常做（现在不再）) 和(现在或过去已经习惯的模式)。
+            </p>
+
+            <div class="testimony-card" id="q-2-1">
+                <div class="testimony-header"><div class="testimony-avatar">💬</div><span>线索 1：过去的常态 (Used to do 肯定)</span></div>
+                <p>The spy _______ in luxury, but now he has to hide in a remote cabin. </p>
+                <div class="choice-pair">
+                    <button class="choice-btn" data-q="2-1" data-answer="A" onclick="checkGrammarQuiz('2-1', 'A', this)">A. used to live</button>
+                    <button class="choice-btn" data-q="2-1" data-answer="B" onclick="checkGrammarQuiz('2-1', 'B', this)">B. is used to live</button>
+                    <button class="choice-btn" data-q="2-1" data-answer="C" onclick="checkGrammarQuiz('2-1', 'C', this)">C. was used to live</button>
+                </div>
+            </div>
+            
+            <div class="testimony-card" id="q-2-2">
+                <div class="testimony-header"><div class="testimony-avatar">💬</div><span>线索 2：过去不经常这样 (Used to do 否定)</span></div>
+                <p>He is a night owl now; he _______only during the day before. </p>
+                <div class="choice-pair">
+                    <button class="choice-btn" data-q="2-2" data-answer="A" onclick="checkGrammarQuiz('2-2', 'A', this)">A. wasn't used to sleep</button>
+                    <button class="choice-btn" data-q="2-2" data-answer="B" onclick="checkGrammarQuiz('2-2', 'B', this)">B. didn't use to sleep</button>
+                    <button class="choice-btn" data-q="2-2" data-answer="C" onclick="checkGrammarQuiz('2-2', 'C', this)">C. didn't used to sleep</button>
+                </div>
+            </div>
+            
+            <div class="testimony-card" id="q-2-3">
+                <div class="testimony-header"><div class="testimony-avatar">💬</div><span>线索 3：过去习惯于 (Be used to doing 肯定)</span></div>
+                <p>Before arriving, the agent（特工）_______the bitter cold of the Arctic base. </p>
+                <div class="choice-pair">
+                    <button class="choice-btn" data-q="2-3" data-answer="A" onclick="checkGrammarQuiz('2-3', 'A', this)">A. was used to enduring</button>
+                    <button class="choice-btn" data-q="2-3" data-answer="B" onclick="checkGrammarQuiz('2-3', 'B', this)">B. used to endure</button>
+                    <button class="choice-btn" data-q="2-3" data-answer="C" onclick="checkGrammarQuiz('2-3', 'C', this)">C. was used to endure</button>
+                </div>
+            </div>
+            
+            <div class="testimony-card" id="q-2-6">
+                <div class="testimony-header"><div class="testimony-avatar">💬</div><span>线索 6：习惯于某事物 (Be used to Noun)</span></div>
+                <p>After decades of intense missions, the old general _______ the pressure of command. </p>
+                <div class="choice-pair">
+                    <button class="choice-btn" data-q="2-6" data-answer="A" onclick="checkGrammarQuiz('2-6', 'A', this)">A. was used to feeling</button>
+                    <button class="choice-btn" data-q="2-6" data-answer="B" onclick="checkGrammarQuiz('2-6', 'B', this)">B. used to feel</button>
+                    <button class="choice-btn" data-q="2-6" data-answer="C" onclick="checkGrammarQuiz('2-6', 'C', this)">C. was used to the pressure</button>
+                </div>
+            </div>
+            
+            <div class="testimony-card" id="q-2-4">
+                <div class="testimony-header"><div class="testimony-avatar">💬</div><span>线索 4：询问过去经常这样么 (Used to do 疑问)</span></div>
+                <p>*_______ the code manually before the computer system was installed? </p>
+                <div class="choice-pair">
+                    <button class="choice-btn" data-q="2-4" data-answer="A" onclick="checkGrammarQuiz('2-4', 'A', this)">A. Did you use to crack</button>
+                    <button class="choice-btn" data-q="2-4" data-answer="B" onclick="checkGrammarQuiz('2-4', 'B', this)">B. Were you used to cracking</button>
+                    <button class="choice-btn" data-q="2-4" data-answer="C" onclick="checkGrammarQuiz('2-4', 'C', this)">C. Used you to crack</button>
+                </div>
+            </div>
+            
+            <div class="testimony-card" id="q-2-5">
+                <div class="testimony-header"><div class="testimony-avatar">💬</div><span>线索 5：询问现在的习惯 (Be used to doing 肯定)</span></div>
+                <p>I can't believe she _______ such small living spaces. </p>
+                <div class="choice-pair">
+                    <button class="choice-btn" data-q="2-5" data-answer="A" onclick="checkGrammarQuiz('2-5', 'A', this)">A. is used to occupy</button>
+                    <button class="choice-btn" data-q="2-5" data-answer="B" onclick="checkGrammarQuiz('2-5', 'B', this)">B. used to occupy</button>
+                    <button class="choice-btn" data-q="2-5" data-answer="C" onclick="checkGrammarQuiz('2-5', 'C', this)">C. is used to occupying</button>
+                </div>
+            </div>
+            
+            <div id="feedback-2-quiz" class="input-feedback" style="display: none; margin-top: 20px;"></div>
+
+            <button class="button-next" id="next-page2-v2" style="display: none;" onclick="goToPage(3)">
+                ✅ 测验完成，进入第三阶段：现场速写
+            </button>
+        </div>
+
+    <div class="page" id="page3">
+    <style>
+        .writing-area {
+            border: 2px solid #ccc; /* 添加边框以区分任务 */
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        .task-content-row {
+            display: flex;
+            align-items: flex-start; /* 顶部对齐 */
+            gap: 20px; /* 图片和文本之间的间距 */
+        }
+        .image-col {
+            flex: 0 0 40%; /* 图片列宽度占 40% */
+            height: 70vh; /* 调整为视窗高度的 70% */
+            display: flex; /* 居中图片 */
+            justify-content: center;
+            align-items: center;
+            border-radius: 5px;
+            overflow: hidden;
+            border: 1px solid #ccc; /* 保持图片边框 */
+        }
+        .image-col img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* 确保图片完整显示，不被裁剪 */
+            background-color: #e0e0e0;
+        }
+        .input-col {
+            flex: 1; /* 占据剩余空间 */
+            display: flex;
+            flex-direction: column;
+            height: 70vh; /* 调整为与图片列高度匹配 */
+        }
+        .input-col textarea {
+            flex-grow: 1; /* 填充剩余空间 */
+            resize: none;
+            min-height: 50px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 20px;
+        }
+        .input-col .exercise-prompt {
+            margin: 0 0 10px 0;
+            font-size: 20px;
+            line-height: 1.4;
+        }
+    </style>
+
+    <header>
+        <h1>🖼️ 现场速写：看图写作</h1>
+        <p>📌 阶段三：写作挑战 — 描述间谍的过去和现在 (全面覆盖 Used to do 和 Be used to doing/Noun 的七种结构)</p>
+    </header>
+
+    <p class="instruction">
+        <strong>任务：</strong> 请仔细观察图片，并使用要求的结构来描述场景。
+        <br>💡 你的目标是写出语法正确且符合图片含义的句子。
+    </p>
+
+    <div class="writing-area" id="task-3-1" data-task-id="3-1">
+        <h2>🖋️ 任务 1：过去的伪装（Used to do 肯定） </h2>
+        <div class="task-content-row">
+            <div class="image-col">
+                <img src="001-suit-placeholder.jpg" alt="穿着西装，带着眼镜，看似无害的普通人" />
+            </div>
+            <div class="input-col">
+                <p class="exercise-prompt"><strong>要求：</strong> 描述他过去常做的一件事。 (使用 <strong>Used to do</strong> 肯定结构)</p>
+                <textarea id="writing-3-1" placeholder="例如：The spy used to wear glasses to look like a harmless businessman."></textarea>
+                <button class="button-next" style="background-color: #0707ff; margin-top: 10px;" onclick="checkPage3Writing('3-1', 'used to positive')">提交 (Used to do +)</button>
+                <div id="feedback-3-1" class="input-feedback" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="writing-area" id="task-3-2" data-task-id="3-2" style="display: none;">
+        <h2>🖋️ 任务 2：现在的习惯动作（Be used to doing 肯定） </h2>
+        <div class="task-content-row">
+            <div class="image-col">
+                <img src="002-fight-placeholder.jpg" alt="在昏暗的巷子里进行近身格斗，眼神坚毅" />
+            </div>
+            <div class="input-col">
+                <p class="exercise-prompt"><strong>要求：</strong> 描述他现在习惯做的一件事。 (使用 <strong>Be used to doing</strong> 肯定结构)</p>
+                <textarea id="writing-3-2" placeholder="例如：He is used to fighting in dark, cramped spaces."></textarea>
+                <button class="button-next" style="background-color: #0707ff; margin-top: 10px;" onclick="checkPage3Writing('3-2', 'be used to doing positive')">提交 (Be used to doing +)</button>
+                <div id="feedback-3-2" class="input-feedback" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="writing-area" id="task-3-7" data-task-id="3-7" style="display: none;">
+        <h2>🖋️ 任务 7：习惯于某环境/事物（Be used to Noun 肯定） </h2>
+        <div class="task-content-row">
+            <div class="image-col">
+                <img src="004danger.jpg" alt="危险任务执行" />
+            </div>
+            <div class="input-col">
+                <p class="exercise-prompt"><strong>要求</strong>：描述他习惯于的某一个名词事物或环境。 (使用 <strong>Be used to + Noun</strong> 结构)</p>
+                <textarea id="writing-3-7" placeholder="例如：He is used to the constant darkness of the long Arctic winter."></textarea>
+                <button class="button-next" style="background-color: #0707ff; margin-top: 10px;" onclick="checkPage3Writing('3-7', 'be used to noun')">提交 (Be used to Noun +)</button>
+                <div id="feedback-3-7" class="input-feedback" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="writing-area" id="task-3-3" data-task-id="3-3" style="display: none;">
+        <h2>🖋️ 任务 3：过去的否定习惯（Used to do 否定）  </h2>
+        <div class="task-content-row">
+            <div class="image-col">
+                <img src="goodfather.jpg" alt="好爸爸" />
+            </div>
+            <div class="input-col">
+                <p class="exercise-prompt"><strong>要求：</strong> 写一个关于他过去不常做的否定句。 (使用 <strong>Didn't use to do</strong>)</p>
+                <textarea id="writing-3-3" placeholder="例如：He didn't use to cook for himself when he lived in the headquarters."></textarea>
+                <button class="button-next" style="background-color: #0707ff; margin-top: 10px;" onclick="checkPage3Writing('3-3', 'used to negative')">提交 (Used to do -)</button>
+                <div id="feedback-3-3" class="input-feedback" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="writing-area" id="task-3-4" data-task-id="3-4" style="display: none;">
+        <h2>🖋️ 任务 4：现在的否定习惯（Be used to doing/Noun 否定）  </h2>
+        <div class="task-content-row">
+            <div class="image-col">
+                <img src="002-fight-placeholder.jpg" alt="在昏暗的巷子里进行近身格斗，眼神坚毅" />
+            </div>
+            <div class="input-col">
+                <p class="exercise-prompt"><strong>要求：</strong> 写一个关于他现在不习惯的否定句（动作或事物均可）。 (使用 <strong>Be not used to doing/Noun</strong>)</p>
+                <textarea id="writing-3-4" placeholder="例如：He isn't used to resting for long periods between missions. (或 He isn't used to loud noises.)"></textarea>
+                <button class="button-next" style="background-color: #0707ff; margin-top: 10px;" onclick="checkPage3Writing('3-4', 'be used to negative')">提交 (Be used to doing/Noun -)</button>
+                <div id="feedback-3-4" class="input-feedback" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="writing-area" id="task-3-5" data-task-id="3-5" style="display: none;">
+        <h2>🖋️ 任务 5：过去的习惯（Used to do 疑问）  </h2>
+        <div class="task-content-row">
+            <div class="image-col">
+                <img src="001-suit-placeholder.jpg" alt="穿着西装，带着眼镜，看似无害的普通人" />
+            </div>
+            <div class="input-col">
+                <p class="exercise-prompt"><strong>要求：</strong> 写一个关于他过去常做的事情的疑问句。 (使用 <strong>Did... use to do?</strong>)</p>
+                <textarea id="writing-3-5" placeholder="例如：Did he use to use a fake ID when traveling?"></textarea>
+                <button class="button-next" style="background-color: #0707ff; margin-top: 10px;" onclick="checkPage3Writing('3-5', 'used to question')">提交 (Used to do ?)</button>
+                <div id="feedback-3-5" class="input-feedback" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="writing-area" id="task-3-6" data-task-id="3-6" style="display: none;">
+        <h2>🖋️ 任务 6：现在的习惯（Be used to doing/Noun 疑问）  </h2>
+        <div class="task-content-row">
+            <div class="image-col">
+                <img src="goodfather.jpg" alt="一张家庭聚会的温馨照片" />
+            </div>
+            <div class="input-col">
+                <p class="exercise-prompt"><strong>要求：</strong> 写一个关于他现在是否习惯的疑问句（动作或事物均可）。 (使用 <strong>Be... used to doing/Noun?</strong>)</p>
+                <textarea id="writing-3-6" placeholder="例如：Is he used to being around so many normal people now? (或 Is he used to this kind of atmosphere now?)"></textarea>
+                <button class="button-next" style="background-color: #0707ff; margin-top: 10px;" onclick="checkPage3Writing('3-6', 'be used to question')">提交 (Be used to doing/Noun ?)</button>
+                <div id="feedback-3-6" class="input-feedback" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <button class="button-next" id="next-page3-v2" onclick="showBadgeModal()" style="display: none;">
+        🎉 恭喜，你已完成间谍档案的重建！进入任务总结
+    </button>
+</div>
+
+    
+
+    
+
+        <div class="page" id="page4">
+            <header>
+                <h1>🎉 结案报告：习惯与常态的解密</h1>
+                <p>📌 任务完成：你已成功识别“语法幽灵”的过去常态与现在习惯。</p>
+            </header>
+
+            <p class="instruction">
+                行动代号：成功！ 侦探，你已收到您的晋升徽章，现在回顾您的任务成果。
+            </p>
+
+            <h2>📜 核心语法点回顾</h2>
+            <div class="grammar-summary">
+                <h3>1. Used to do：过去的常态或习惯</h3>
+                <ul>
+                    <li>功能： 表达过去经常发生，但现在已经停止的动作或状态。</li>
+                    <li>结构要点： 后面必须接动词原形 (V-base)。</li>
+                    <li>例句： He used to communicate via morse code. (他过去常使用摩斯电码交流。)</li>
+                </ul>
+                
+                <h3>2. Be used to doing/Noun：习惯于...</h3>
+                <ul>
+                    <li>功能： 表达习惯于某种状态、环境、行为或某物/某人（现在或过去）。</li>
+                    <li>结构要点： 后面必须接动名词 (V-ing) 或名词 (Noun)。 Be 动词可根据时态变化 (am/is/are, was/were)。</li>
+                    <li>例句： She is used to working under intense pressure. (习惯于动作) / She is used to the heat. (习惯于某物)</li>
+                </ul>
+            </div>
+
+            <button class="button-next" style="background-color: #5d5d81;" onclick="alert('恭喜完成本单元学习！下次任务再见！')">
+                任务结束，关闭档案
+            </button>
+        </div>
+
+        <div class="page" id="page5" style="display: none;"></div>
+    </div>
+    
+    <div id="badge-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 class="badge-title">🎖️ 授予荣誉徽章：高级语法分析师</h2>
+            <div class="badge-text">
+                <p style="font-size: 1.1em; font-weight: bold; color: #e65100;">
+                    特工，你展现了非凡的语法洞察力！
+                </p>
+                <p>
+                    你成功区分并灵活运用了 $\text{Used to do}$ 和 $\text{Be used to doing/Noun}$ 这对“语法双面间谍”的全部肯定、否定和疑问形式。
+                </p>
+                <p style="margin-top: 10px;">
+                    你的成绩： 任务完成度 $\text{100\%}$，写作结构运用精准无误。
+                </p>
+                <p style="margin-top: 15px; font-weight: bold;">
+                    你的级别已晋升为【高级语法分析师】！ 准备好迎接下一个更具挑战性的秘密档案吧！
+                </p>
+            </div>
+            <button class="modal-button" onclick="hideBadgeModalAndGoToPage4()">
+                接收徽章，进入结案报告 (Page 4)
+            </button>
+        </div>
+    </div>
+    
+  <div id="notes-modal" class="notes-modal" style="display: none;"></div>
+
+ <script>
+    // --- 页面控制函数 ---
+    let currentPage = 1;
+    const totalPages = 4; 
+
+    function goToPage(pageNumber) {
+        if (pageNumber < 1 || pageNumber > totalPages) return; 
+
+        const currentPageElement = document.getElementById(`page${currentPage}`);
+        if (currentPageElement) {
+            currentPageElement.classList.remove('active');
+        }
+
+        currentPage = pageNumber;
+
+        const nextPageElement = document.getElementById(`page${currentPage}`);
+        if (nextPageElement) {
+            nextPageElement.classList.add('active');
+        }
+        
+        window.scrollTo(0, 0); 
+
+        // 清除选择状态
+        document.querySelectorAll('.choice-btn').forEach(btn => {
+            btn.classList.remove('correct-answer', 'wrong-answer');
+        });
+        document.querySelectorAll('.input-feedback').forEach(f => f.style.display = 'none');
+    }
+
+    // --- Modal 控制函数 ---
+    function showBadgeModal() {
+        // 检查Page 3是否全部完成，如果未完成，不弹出
+        const allCompleted = Object.values(writingProgress).every(p => p);
+        if (!allCompleted) {
+             alert('请先完成所有七项写作挑战！');
+             return;
+        }
+
+        const modal = document.getElementById('badge-modal');
+        // 隐藏当前页面（Page 3）内容，让背景变暗
+        const currentPageElement = document.getElementById(`page${currentPage}`);
+        if (currentPageElement) {
+            currentPageElement.classList.remove('active');
+        }
+        modal.style.display = 'flex'; // 显示 modal
+    }
+
+    function hideBadgeModalAndGoToPage4() {
+        const modal = document.getElementById('badge-modal');
+        modal.style.display = 'none'; // 隐藏 modal
+        goToPage(4); // 前往最终总结页 (Page 4)
+    }
+
+    // --- Page 1 秘密文件翻开逻辑 ---
+    function toggleSecretFile(element) {
+        element.classList.toggle('opened');
+    }
+
+
+    // --- Page 2 逻辑：选择填空 (新增 Q-2-6) ---
+    const quizAnswers = {
+        '2-1': 'A', // used to live (used to do)
+        '2-2': 'B', // didn't use to sleep (used to do 否定)
+        '2-3': 'A', // was used to enduring (be used to doing 过去时)
+        '2-6': 'C', // was used to the pressure (be used to Noun 过去时)
+        '2-4': 'A', // Did you use to crack (used to do 疑问)
+        '2-5': 'C'  // is used to occupying (be used to doing 现在时)
+    };
+
+    let quizProgress = {
+        '2-1': false,
+        '2-2': false,
+        '2-3': false,
+        '2-6': false, 
+        '2-4': false,
+        '2-5': false
+    };
+
+    function checkGrammarQuiz(qId, userChoice, element) {
+        const isCorrect = userChoice === quizAnswers[qId];
+        const feedback = document.getElementById('feedback-2-quiz');
+        
+        const card = element.closest('.testimony-card');
+        card.querySelectorAll('.choice-btn').forEach(btn => {
+            btn.classList.remove('correct-answer', 'wrong-answer');
+        });
+
+        if (isCorrect) {
+            element.classList.add('correct-answer');
+            quizProgress[qId] = true;
+            feedback.textContent = `✅ 正确！线索 ${qId} 确认。`;
+            feedback.style.backgroundColor = '#d4edda';
+        } else {
+            element.classList.add('wrong-answer');
+            quizProgress[qId] = false;
+            card.querySelector(`.choice-btn[data-answer="${quizAnswers[qId]}"]`).classList.add('correct-answer');
+            feedback.textContent = `❌ 错误！请回顾：Used to do (过去常做) / Be used to doing/Noun (现在/过去习惯)。`;
+            feedback.style.backgroundColor = '#f8d7da';
+        }
+        
+        feedback.style.display = 'block';
+        
+        const allCorrect = Object.values(quizProgress).every(p => p);
+        const nextButton = document.getElementById('next-page2-v2');
+        if (allCorrect) {
+            nextButton.style.display = 'block';
+            window.scrollTo(0, document.body.scrollHeight);
+        } else {
+            nextButton.style.display = 'none';
+        }
+    }
+
+    // --- Page 3 任务流程控制 (新增) ---
+    const taskOrder = ['3-1', '3-2', '3-7', '3-3', '3-4', '3-5', '3-6'];
+    const taskIndexMap = {
+        '3-1': 0, '3-2': 1, '3-7': 2, 
+        '3-3': 3, '3-4': 4, '3-5': 5, '3-6': 6
+    };
+
+    /**
+     * 显示下一个任务并隐藏当前任务
+     */
+    function showNextTask(currentTaskId) {
+        const currentIndex = taskIndexMap[currentTaskId];
+        const nextIndex = currentIndex + 1;
+        
+        // 隐藏当前任务
+        const currentTaskElement = document.getElementById(`task-${currentTaskId}`);
+        if(currentTaskElement) {
+            currentTaskElement.style.display = 'none';
+        }
+
+        // 显示下一个任务
+        if (nextIndex < taskOrder.length) {
+            const nextTaskId = taskOrder[nextIndex];
+            const nextTaskElement = document.getElementById(`task-${nextTaskId}`);
+            if (nextTaskElement) {
+                nextTaskElement.style.display = 'block';
+                // 平滑滚动到下一个任务的顶部
+                nextTaskElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+    }
+
+
+    // --- Page 3 逻辑：看图写作 (七项任务) ---
+    let writingProgress = {
+        '3-1': false, // used to do (+)
+        '3-2': false, // be used to doing (+)
+        '3-7': false, // be used to noun (+) 
+        '3-3': false, // used to do (-)
+        '3-4': false, // be used to doing/noun (-)
+        '3-5': false, // used to do (?)
+        '3-6': false  // be used to doing/noun (?)
+    };
+
+    function checkPage3Writing(qId, requiredType) {
+        const textarea = document.getElementById(`writing-${qId}`);
+        const feedback = document.getElementById(`feedback-${qId}`);
+        
+        if (!textarea) {
+            console.error(`Element writing-${qId} not found.`);
+            return;
+        }
+
+        const text = textarea.value.trim().toLowerCase();
+        
+        let isPass = false;
+        let failMessage = "";
+        
+        if (feedback) feedback.style.display = 'none';
+
+        // 检查句子长度
+        if (text.length < 15) {
+            failMessage = "🔍 侦探：请写一个更完整、更具描述性的句子。";
+        } else {
+            
+            // 核心语法检查
+            if (requiredType === 'used to positive') {
+                // 检查：used to + V原
+                if (text.includes('used to ') && !text.includes('using') && !text.includes('to doing') && !text.includes('did')) {
+                    isPass = true;
+                } else {
+                    failMessage = "❌ 语法错误！Used to do (过去常做) 后面必须接动词原形，且句中不应出现 be 动词或 did。";
+                }
+            } else if (requiredType === 'be used to doing positive') {
+                // 检查：be (am/is/are/was/were) used to + V-ing
+                const beUsedTo = (text.includes('is used to') || text.includes('am used to') || text.includes('are used to') || text.includes('was used to') || text.includes('were used to'));
+                if (beUsedTo && text.includes('ing')) {
+                    isPass = true;
+                } else {
+                    failMessage = "❌ 语法错误！Be used to doing (习惯于动作) 后面必须接动名词 (V-ing)。请检查 be 动词和 V-ing 形式。";
+                }
+            } else if (requiredType === 'be used to noun') {
+                // 检查：Be used to + Noun/Pronoun
+                const beUsedTo = (text.includes('is used to') || text.includes('am used to') || text.includes('are used to') || text.includes('was used to') || text.includes('were used to'));
+                // 检查句中是否明显避开了 V-ing (虽然不完美，但足以做提示)
+                const isNoun = !text.match(/used to\s+(\w+ing)/g); 
+                
+                if (beUsedTo && isNoun) {
+                    isPass = true;
+                } else {
+                    failMessage = "❌ 语法错误！Be used to Noun 结构要求后面接名词或代词，请检查 be 动词和 used to 后是否使用了动名词 (V-ing)。";
+                }
+            } else if (requiredType === 'used to negative') {
+                // 检查：didn't use to (V原) 
+                if (text.includes('didn\'t use to') && !text.includes('ing')) {
+                    isPass = true;
+                } else {
+                    failMessage = "❌ 否定句结构错误！Used to do 的否定句应使用 didn't use to (V原)。";
+                }
+            } else if (requiredType === 'be used to negative') {
+                // 检查：be not used to (V-ing/Noun)
+                const beNotUsedTo = (text.includes('isn\'t used to') || text.includes('am not used to') || text.includes('aren\'t used to') || text.includes('wasn\'t used to') || text.includes('weren\'t used to') || text.includes('not used to'));
+                if (beNotUsedTo) {
+                    isPass = true;
+                } else {
+                    failMessage = "❌ 否定句结构错误！Be used to doing/Noun 的否定句应使用 be not used to (V-ing/Noun)。";
+                }
+            } else if (requiredType === 'used to question') {
+                // 检查：Did S use to V原?
+                if (text.includes('did') && text.includes('use to') && !text.includes('ing')) {
+                     isPass = true;
+                } else {
+                    failMessage = "❌ 疑问句结构错误！Used to do 的疑问句应使用 Did... use to (V原)?";
+                }
+            } else if (requiredType === 'be used to question') {
+                // 检查：Be S used to V-ing/Noun?
+                const beStart = (text.startsWith('is') || text.startsWith('am') || text.startsWith('are') || text.startsWith('was') || text.startsWith('were'));
+                if (beStart && text.includes('used to')) {
+                     isPass = true;
+                } else {
+                    failMessage = "❌ 疑问句结构错误！Be used to doing/Noun 的疑问句应使用 Be... used to (V-ing/Noun)?";
+                }
+            }
+        }
+        
+        writingProgress[qId] = isPass;
+        
+        // 检查是否全部完成
+        const allCompleted = Object.values(writingProgress).every(p => p);
+
+        if (feedback) {
+            if (isPass) {
+                feedback.textContent = `✅ 写作成功！句子结构 (${requiredType}) 运用正确！`;
+                feedback.style.backgroundColor = '#ccffcc';
+
+                // 成功后，如果未全部完成，则显示下一个任务
+                if (!allCompleted) {
+                    setTimeout(() => {
+                        showNextTask(qId);
+                    }, 500); // 延迟0.5秒显示，让用户看清反馈
+                }
+                
+            } else {
+                feedback.textContent = failMessage;
+                feedback.style.backgroundColor = '#ffcccc';
+            }
+            feedback.style.display = 'block';
+        }
+        
+        const nextButton = document.getElementById('next-page3-v2');
+        if (allCompleted) {
+            // 注意：这里改为调用 showBadgeModal()
+            nextButton.setAttribute('onclick', 'showBadgeModal()');
+            nextButton.style.display = 'block';
+            window.scrollTo(0, document.body.scrollHeight);
+        } else {
+            nextButton.style.display = 'none';
+        }
+    }
+
+    // 页面初始化：在 DOMContentLoaded 中处理 Page 3 任务的显示隐藏
+    document.addEventListener('DOMContentLoaded', () => {
+        const taskElements = document.querySelectorAll('#page3 .writing-area');
+        taskElements.forEach((task, index) => {
+            // 第一个任务 (index 0) 默认显示，其他任务隐藏
+            if (index > 0) {
+                task.style.display = 'none';
+            }
+        });
+    });
+
+    // 页面初始化
+    window.onload = function() {
+        for (let i = 1; i <= 5; i++) {
+            const page = document.getElementById(`page${i}`);
+            if (page) {
+                page.classList.remove('active');
+                if (i > totalPages) {
+                    page.style.display = 'none'; 
+                }
+            }
+        }
+        const page1 = document.getElementById('page1');
+        if (page1) {
+            page1.classList.add('active');
+        }
+        
+        const modal = document.getElementById('notes-modal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    };
+    </script>
+</body>
+</html>

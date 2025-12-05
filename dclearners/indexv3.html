@@ -1,0 +1,1580 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>语法小侦探</title>
+    <style>
+        /* CSS 样式：保持侦探社的专业与沉稳风格 */
+        body {
+            font-family: 'Georgia', serif;
+            background-color: #f4f4f9;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        header {
+            text-align: center;
+            border-bottom: 2px solid #5d5d81;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #5d5d81; /* 深蓝紫，代表推理 */
+            font-size: 2.5em;
+        }
+
+        h2 {
+            color: #a00; /* 深红，代表悬疑 */
+            font-size: 1.5em;
+            border-bottom: 1px dashed #ccc;
+            padding-bottom: 5px;
+            margin-top: 25px;
+        }
+        
+        h3 {
+            color: #4a4a6b;
+            font-size: 1.2em;
+        }
+
+        .instruction {
+            background-color: #e6e6fa; /* 淡紫，代表提示 */
+            padding: 15px;
+            border-left: 5px solid #5d5d81;
+            margin-bottom: 20px;
+        }
+
+        .option-box, .input-feedback {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s, border-color 0.3s;
+            border-radius: 5px; /* 统一圆角 */
+            position: relative; /* For suspect-label absolute positioning */
+        }
+        
+        /* Hover Label for Suspects (UPDATED) */
+        .suspect-label {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(160, 0, 0, 0.95); /* Deep red overlay */
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5em; /* 放大标签 */
+            font-weight: 900; /* 加粗 */
+            opacity: 0;
+            pointer-events: none; /* Allows clicks to pass through when hidden */
+            transition: opacity 0.3s ease;
+            border-radius: 5px;
+            letter-spacing: 3px;
+            z-index: 5; /* Ensure it floats above content */
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        .option-box:hover .suspect-label {
+            opacity: 1;
+        }
+
+        /* 多选样式 */
+        .option-box.selected {
+             border: 3px solid #ffcc00; /* 选中边框颜色 */
+             background-color: #fff8e1; /* 浅黄色背景 */
+             box-shadow: 0 0 5px rgba(255, 204, 0, 0.5);
+        }
+
+        .option-box:not(.selected):hover {
+            background-color: #eaeaff;
+        }
+        
+        .option-box.correct {
+            border: 3px solid green;
+            background-color: #e6ffe6;
+        }
+        
+        .option-box.incorrect {
+            border: 3px solid red;
+            background-color: #ffe6e6;
+        }
+
+        .button-next {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background-color: #a00;
+            color: white;
+            text-align: center;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin-top: 30px;
+            transition: background-color 0.3s;
+        }
+
+        .button-next:hover {
+            background-color: #800;
+        }
+        
+        /* ============== 放大镜效果 CSS ============== */
+        .magnifying-area {
+            position: relative; 
+            width: 100%;
+            overflow: hidden; 
+            cursor: none; 
+            margin: 20px auto;
+            border-radius: 5px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            max-width: 800px; 
+        }
+
+        .magnifying-area img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 5px;
+            transition: none;
+        }
+
+        #magnifier-lens {
+            position: absolute;
+            border: 4px solid #fff;
+            border-radius: 50%; 
+            box-shadow: 0 0 0 1px #000, 0 0 10px rgba(0, 0, 0, 0.6);
+            cursor: none; 
+            width: 150px; 
+            height: 150px;
+            display: none; 
+            background-repeat: no-repeat;
+            pointer-events: none; 
+            z-index: 10;
+        }
+        /* ================================================= */
+
+        /* 语法总结样式 */
+        .grammar-summary {
+            margin-top: 30px;
+            padding: 20px;
+            border: 2px solid #5d5d81;
+            border-radius: 5px;
+            background-color: #fff0f5; 
+        }
+        
+        /* 页面切换控制 */
+        .page {
+            display: none; 
+        }
+        .page.active {
+            display: block; 
+        }
+        
+        .analysis-box {
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px dashed #5d5d81;
+            background-color: #f7f7ff;
+            border-radius: 5px;
+        }
+        
+        /* Page 5 单选选项组的新样式 */
+        .choice-pair {
+            display: flex;
+            gap: 15px; 
+            margin-top: 10px;
+        }
+        .choice-pair .option-box {
+            flex: 1; /* 使选项平分空间 */
+            text-align: center;
+            margin-bottom: 0; /* 移除内部 margin-bottom */
+        }
+        /* ================================================= */
+
+        .clause-example {
+            font-family: monospace;
+            background-color: #eee;
+            padding: 5px;
+            border-radius: 3px;
+            display: inline-block;
+            font-weight: bold;
+            color: #a00;
+        }
+
+        .suspect-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .suspect-grid .option-box {
+            margin-bottom: 0;
+            min-height: 100px; 
+        }
+        
+        /* 线索盒样式 */
+        .clue-box {
+            border: 2px solid #ffcc00;
+            padding: 15px;
+            margin-bottom: 20px;
+            background-color: #fffaf0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .clue-box ul {
+            list-style: disc;
+            margin-left: 20px;
+        }
+        
+        /* 塔罗牌样式 (UPDATED: Use the specific placeholder images 003, 004, 005) */
+        .tarot-grid {
+            display: flex;
+            justify-content: space-around;
+            perspective: 1000px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        .tarot-card {
+            width: 150px;
+            height: 220px;
+            margin: 10px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.8s;
+            cursor: pointer;
+        }
+        .tarot-card.flipped {
+            transform: rotateY(180deg);
+        }
+        .tarot-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 10px;
+            padding: 15px;
+            box-sizing: border-box;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        /* 塔罗牌背面 (使用占位图模拟 003, 004, 005) */
+        .tarot-back {
+            color: white;
+            font-size: 1.5em;
+            border: 5px solid gold;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: cover;
+        }
+        
+        /* 默认的卡牌 1 背景 (模拟 003.PNG) */
+        #card1-back {
+            background-image: url('003.PNG');
+        }
+        /* 卡牌 2 背景 (模拟 004.PNG) */
+        #card2-back {
+            background-image: url('004.PNG');
+        }
+        /* 卡牌 3 背景 (模拟 005.PNG) */
+        #card3-back {
+            background-image: url('005.PNG');
+        }
+        
+        .tarot-front {
+            background-color: #fff;
+            color: #333;
+            transform: rotateY(180deg);
+            border: 2px solid #5d5d81;
+        }
+        .tarot-front h4 {
+            margin: 5px 0 10px;
+            color: #a00;
+        }
+        .tarot-front p {
+            font-size: 0.9em;
+            line-height: 1.3;
+        }
+
+        /* ============== 侦探笔记模态框 (NEW) ============== */
+         /* 模态框的自定义样式 (覆盖 Tailwind for specifics) */
+        #notes-modal {
+            display: none; /* 默认隐藏 */
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.6); /* 半透明背景 */
+            backdrop-filter: blur(5px); /* 模糊效果 */
+        }
+
+        .modal-content-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100%;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background-color: #ffffff;
+            position: relative;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            max-width: 90%;
+            width: 550px;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 24px; /* 从 28px 修改为 24px */
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            transition: color 0.2s;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: #ef4444; /* Red 500 */
+            text-decoration: none;
+        }
+
+        .note-header {
+            border-bottom: 2px solid #3b82f6; /* Blue 500 */
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            color: #1e3a8a; /* Blue 800 */
+        }
+
+        .note-list li {
+            margin-bottom: 12px;
+            padding-left: 25px;
+            position: relative;
+            line-height: 1.6;
+        }
+
+        .note-list li::before {
+            content: "🔎"; /* 使用小图标作为列表标记 */
+            position: absolute;
+            left: 0;
+            color: #10b981; /* Emerald 500 */
+            font-weight: bold;
+        }
+
+        /* ============== Page 2 专用样式: 证词卡片 ============== */
+        .testimony-card {
+            border: 2px solid #ddd;
+            border-left: 5px solid #a00;
+            background: #fff;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+        .testimony-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #333;
+        }
+        .testimony-avatar {
+            width: 40px;
+            height: 40px;
+            background-color: #ddd;
+            border-radius: 50%;
+            margin-right: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2em;
+        }
+        .choice-btn {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 10px;
+            margin: 5px 0;
+            background: #f4f4f9;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .choice-btn:hover {
+            background: #e0e0ff;
+        }
+        .choice-btn.correct-answer {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .choice-btn.wrong-answer {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        
+        /* 表格样式 */
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .summary-table th, .summary-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        .summary-table th {
+            background-color: #5d5d81;
+            color: white;
+        }
+        .summary-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        
+        /* Page 3/4 练习特有样式 */
+        .exercise-prompt {
+            background-color: #fff8e1;
+            padding: 15px;
+            border: 2px solid #ffcc00;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .sentence-pair {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fefefe;
+        }
+        .sentence-pair .option-box {
+            display: block;
+            margin-bottom: 5px;
+            cursor: pointer;
+        }
+        .sentence-pair h4 {
+            color: #a00;
+            margin-top: 0;
+        }
+        
+        .writing-area {
+            border: 1px solid #5d5d81;
+            padding: 20px;
+            background-color: #f7f7ff;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+        .writing-area textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 1.1em;
+        }
+        /* ================================================= */
+    </style>
+</head>
+<body>
+    <div class="container">
+        
+        <div class="page active" id="page1">
+            <header>
+                <h1>🔎 定语从句侦探社：谁是真正的嫌疑人？</h1>
+                <p>📌 阶段一：限制性定语从句 (Defining Relative Clauses)</p>
+            </header>
+
+            <p class="instruction">
+                规则： 限制性定语从句的作用是像侦探一样，准确限定你要找的那个人。根据线索，从所有嫌疑人中筛选出4名最有可能的潜在嫌疑犯。
+            </p>
+
+            <div class="clue-box">
+                <h2>犯罪现场发现的4大线索</h2>
+                <ul>
+                    <li>🚩线索 1： 门口有一把湿泥土。</li>
+                    <li>🚩线索 2：现场留有一颗珍珠耳环。</li>
+                    <li>🚩线索 3：门把手上留有油腻的指纹。</li>
+                    <li>🚩线索 4：在地毯下发现一个玩具车的轮子。</li>
+                </ul>
+            </div>
+
+
+            <div class="magnifying-area">
+                <img id="suspect-image" 
+                     src="002.png" 
+                     alt="侦探正在锁定目标" 
+                />
+                <div id="magnifier-lens"></div> </div>
+            <p style="text-align: center; font-size: 0.9em; color: #888;">💡 鼠标悬停在上方图片上，放大镜将跟随你的目光移动，观察线索。</p>
+
+
+            <h2>任务：用定语从句锁定4名潜在嫌疑犯 (多选)</h2>
+            <div class="suspect-grid">
+                
+                <div class="option-box" data-id="Gardener" data-correct="true" onclick="toggleSelection('Gardener')">
+                    <div class="suspect-label">GARDENER</div>
+                    <h3>Who am I？ </h3>
+                    <p>A person who works with soil daily was seen near the main entrance.</p>
+                </div>
+                
+                <div class="option-box" data-id="Maid" data-correct="false" onclick="toggleSelection('Maid')">
+                    <div class="suspect-label">MAID</div>
+                    <h3>Who am I？ </h3>
+                    <p>A person that wore a clean uniform today claims she heard nothing.</p>
+                </div>
+                
+                <div class="option-box" data-id="Mistress" data-correct="true" onclick="toggleSelection('Mistress')">
+                    <div class="suspect-label">MISTRESS</div>
+                    <h3>Who am I？ </h3>
+                    <p>A person whose expensive dress could pay for ten days’ meals for an ordinary family had no alibi（不在场证明）.</p>
+                </div>
+                
+                <div class="option-box" data-id="Butler" data-correct="false" onclick="toggleSelection('Butler')">
+                    <div class="suspect-label">BUTLER</div>
+                    <h3>Who am I？ </h3>
+                    <p>The Butler, who has served the family for 30 years, was very calm.</p>
+                </div>
+                
+                <div class="option-box" data-id="Son" data-correct="true" onclick="toggleSelection('Son')">
+                    <div class="suspect-label">SON</div>
+                    <h3>Who am I？ </h3>
+                    <p>A child who constantly plays with race cars was found to be asleep in his room.</p>
+                </div>
+
+                <div class="option-box" data-id="Daughter" data-correct="false" onclick="toggleSelection('Daughter')">
+                    <div class="suspect-label">DAUGHTER</div>
+                    <h3>Who am I？ </h3>
+                    <p>The daughter，whose room is decorated all pink，was seen studying.</p>
+                </div>
+                
+                <div class="option-box" data-id="Chef" data-correct="true" onclick="toggleSelection('Chef')">
+                    <div class="suspect-label">CHEF</div>
+                    <h3>Who am I？ </h3>
+                    <p>A man who often handles food with greasy（油腻的） hands was preparing a late-night meal.</p>
+                </div>
+                
+            </div>
+
+            <div id="feedback-1" class="input-feedback" style="display: none; margin-top: 20px;"></div>
+
+            <button class="button-next" id="next-page1" style="display: none;" onclick="showNotesModal()">
+                ✅ 锁定潜在嫌疑犯，进入下一步：排除法
+            </button>
+
+            <div class="grammar-summary">
+                <h3>翻开塔罗牌：限制性定语从句的奥秘</h3>
+                <div class="tarot-grid" id="tarot-p1">
+                    <div class="tarot-card" onclick="flipCard(this)">
+                        <div class="tarot-face tarot-back" id="card1-back">范围</div>
+                        <div class="tarot-face tarot-front">
+                            <h4>范围限定</h4>
+                            <p>缩小主语范围，限定是“哪一个”或“哪个种类”。</p>
+                        </div>
+                    </div>
+                    <div class="tarot-card" onclick="flipCard(this)">
+                        <div class="tarot-face tarot-back" id="card2-back">重要性</div>
+                        <div class="tarot-face tarot-front">
+                            <h4>不可或缺</h4>
+                            <p>提供决定性信息。没有它，句子意思不完整或不准确。</p>
+                        </div>
+                    </div>
+                    <div class="tarot-card" onclick="flipCard(this)">
+                        <div class="tarot-face tarot-back" id="card3-back">分隔符</div>
+                        <div class="tarot-face tarot-front">
+                            <h4>禁止逗号</h4>
+                            <p>信息太重要，必须与主句紧密相连。不能用逗号隔开。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page" id="page2">
+            <header>
+                <h1>🤥 审讯室：谁的证词在撒谎？</h1>
+                <p>📌 阶段二：关系副词 (Where, When, Why) 与逗号的秘密</p>
+            </header>
+
+            <p class="instruction">
+                <strong>核心法则：</strong> <br>
+                1. <strong>明确的对象</strong>（如具体的城市名、具体时间点）：需要逗号（非限制性），因为大家都知道是哪。 <br>
+                2. <strong>模糊的对象</strong>（如 the place, the time）：不需要逗号（限制性），需要从句来告诉你是哪一个。<br>
+                3. <strong>Why (原因)</strong>：永远不需要逗号。
+            </p>
+
+            <div class="clue-box">
+                <h2>任务：验证嫌疑人的不在场证明</h2>
+                <p>嫌疑人有些紧张，他们的证词中隐藏着语法错误。请点击<strong>语法正确</strong>的句子来通过测谎仪。如果不符合上述法则，那就是“谎言”！</p>
+            </div>
+
+            <div class="testimony-card" id="testimony-mistress">
+                <div class="testimony-header">
+                    <div class="testimony-avatar">👩</div>
+                    <span>Mistress (女主人) 的证词</span>
+                </div>
+                <p>她提到了地点 (Where) 和原因 (Why)。哪句是真话（语法正确）？</p>
+                
+                <button class="choice-btn" onclick="checkTestimony('mistress', 'A', false)">
+                    A. "I went to <strong>Paris</strong> where I bought the dress." 
+                </button>
+                <button class="choice-btn" onclick="checkTestimony('mistress', 'B', true)">
+                    B. "I went to <strong>Paris</strong>, where I bought the dress." 
+                </button>
+
+                <div style="margin-top:10px; border-top:1px dashed #ccc; padding-top:10px;">
+                    <p>关于原因：</p>
+                    <button class="choice-btn" onclick="checkTestimony('mistress', 'C', true)">
+                        C. "That is the <strong>reason</strong> why I screamed." 
+                    </button>
+                    <button class="choice-btn" onclick="checkTestimony('mistress', 'D', false)">
+                        D. "That is the <strong>reason</strong>, why I screamed." 
+                    </button>
+                </div>
+                <div id="feedback-mistress" class="input-feedback" style="display:none;"></div>
+            </div>
+
+            <div class="testimony-card" id="testimony-chef" style="display:none;">
+                <div class="testimony-header">
+                    <div class="testimony-avatar">👨‍🍳</div>
+                    <span>Chef (厨师) 的证词</span>
+                </div>
+                <p>他提到了时间 (When) 和地点 (Where)。哪句是真话？</p>
+
+                <button class="choice-btn" onclick="checkTestimony('chef', 'A', true)">
+                    A. "It was <strong>midnight</strong>, when the moon was high." 
+                </button>
+                <button class="choice-btn" onclick="checkTestimony('chef', 'B', false)">
+                    B. "It was <strong>midnight</strong> when the moon was high."
+                </button>
+
+                <div style="margin-top:10px; border-top:1px dashed #ccc; padding-top:10px;">
+                    <p>关于躲藏地点：</p>
+                    <button class="choice-btn" onclick="checkTestimony('chef', 'C', false)">
+                        C. "I hid in a <strong>place</strong>, where nobody goes." 
+                    </button>
+                    <button class="choice-btn" onclick="checkTestimony('chef', 'D', true)">
+                        D. "I hid in a <strong>place</strong> where nobody goes." 
+                    </button>
+                </div>
+                <div id="feedback-chef" class="input-feedback" style="display:none;"></div>
+            </div>
+
+            <div class="testimony-card" id="testimony-gardener" style="display:none;">
+                <div class="testimony-header">
+                    <div class="testimony-avatar">🌿</div>
+                    <span>Gardener (园丁) 的证词</span>
+                </div>
+                <p>他提到了原因 (Why) 和时间 (When)。哪句是真话？</p>
+
+                <button class="choice-btn" onclick="checkTestimony('gardener', 'A', false)">
+                    A. "The <strong>reason</strong>, why I have mud is my job." 
+                </button>
+                <button class="choice-btn" onclick="checkTestimony('gardener', 'B', true)">
+                    B. "The <strong>reason</strong> why I have mud is my job." 
+                </button>
+
+                <div style="margin-top:10px; border-top:1px dashed #ccc; padding-top:10px;">
+                    <p>关于入职时间：</p>
+                    <button class="choice-btn" onclick="checkTestimony('gardener', 'C', true)">
+                        C. "I started here in <strong>1990</strong>, when I was young." 
+                    </button>
+                    <button class="choice-btn" onclick="checkTestimony('gardener', 'D', false)">
+                        D. "I started here in <strong>1990</strong> when I was young."
+                    </button>
+                </div>
+                <div id="feedback-gardener" class="input-feedback" style="display:none;"></div>
+            </div>
+
+            <div class="testimony-card" id="testimony-son" style="display:none;">
+                <div class="testimony-header">
+                    <div class="testimony-avatar">👦</div>
+                    <span>Son (儿子) 的证词</span>
+                </div>
+                <p>他提到了原因 (Why) 和地点 (Where)。哪句是真话？</p>
+
+                <button class="choice-btn" onclick="checkTestimony('son', 'A', true)">
+                    A. "The <strong>reason</strong> why I was awake is fear." 
+                </button>
+                <button class="choice-btn" onclick="checkTestimony('son', 'B', false)">
+                    B. "The <strong>reason</strong>, why I was awake is fear."
+                </button>
+
+                <div style="margin-top:10px; border-top:1px dashed #ccc; padding-top:10px;">
+                    <p>关于所在位置：</p>
+                    <button class="choice-btn" onclick="checkTestimony('son', 'C', false)">
+                        C. "I was in <strong>my bedroom</strong> where I keep toys." 
+                    </button>
+                    <button class="choice-btn" onclick="checkTestimony('son', 'D', true)">
+                        D. "I was in <strong>my bedroom</strong>, where I keep toys." 
+                    </button>
+                </div>
+                <div id="feedback-son" class="input-feedback" style="display:none;"></div>
+            </div>
+
+            <div class="grammar-summary" id="page2-summary" style="display:none;">
+                <h3>📜 侦探语法档案：关系词完全手册</h3>
+                <p>这是本次案件的关键语法线索，请务必记录！</p>
+                <table class="summary-table">
+                    <thead>
+                        <tr>
+                            <th>关系词</th>
+                            <th>先行词 (修饰对象)</th>
+                            <th>逗号规则 (关键!)</th>
+                            <th>例句</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Who</strong></td>
+                            <td>人 (Person)</td>
+                            <td>明确的人 → 加逗号<br>泛指的人 → 不加逗号</td>
+                            <td>Mr. Black, who...<br>The man who...</td>
+                        </tr>
+                        <tr>
+                            <td><strong>That</strong></td>
+                            <td>人 / 物</td>
+                            <td>❌ <strong>永远不加逗号</strong></td>
+                            <td>The clue that I found...</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Which</strong></td>
+                            <td>物 (Thing)</td>
+                            <td>明确的物 → 加逗号<br>泛指的物 → 不加逗号</td>
+                            <td>The diary, which...<br>The book which...</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Where</strong></td>
+                            <td>地点 (Place)</td>
+                            <td><strong>明确地点</strong> (Paris, My room) → ✅ 加逗号<br><strong>模糊地点</strong> (The place) → ❌ 不加逗号</td>
+                            <td>Beijing, where I live...<br>The city where I live...</td>
+                        </tr>
+                        <tr>
+                            <td><strong>When</strong></td>
+                            <td>时间 (Time)</td>
+                            <td><strong>明确时间</strong> (1990, Midnight) → ✅ 加逗号<br><strong>模糊时间</strong> (The day) → ❌ 不加逗号</td>
+                            <td>Yesterday, when I...<br>The day when I...</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Why</strong></td>
+                            <td>原因 (Reason)</td>
+                            <td>❌ <strong>永远不加逗号</strong></td>
+                            <td>The reason why...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <button class="button-next" id="next-page2" style="display: none;" onclick="goToPage(3)">
+                ✅ 证词核对完毕，进入下一阶段
+            </button>
+        </div>
+
+        <div class="page" id="page3">
+            <header>
+                <h1>⚖️ 逗号的审判：限制还是非限制？</h1>
+                <p>📌 阶段三：选择正确的标点，区分定语从句的类型</p>
+            </header>
+
+            <p class="instruction">
+                <strong>任务：</strong> 请判断每组句子中，哪一句的逗号使用是**正确**的。
+                <br>💡 回忆：逗号隔开的是**可省略**的补充信息。
+            </p>
+
+            <div class="sentence-pair">
+                <h4>1. 限定信息 (不可省略)</h4>
+                <div class="option-box" data-q="q1" data-correct="false" onclick="checkPage3('q1', this, false)">
+                    A. The knife, which was used in the crime, was left on the table.
+                </div>
+                <div class="option-box" data-q="q1" data-correct="true" onclick="checkPage3('q1', this, true)">
+                    B. The knife which was used in the crime was left on the table.
+                </div>
+            </div>
+
+            <div class="sentence-pair">
+                <h4>2. 补充信息 (可省略)</h4>
+                <div class="option-box" data-q="q2" data-correct="true" onclick="checkPage3('q2', this, true)">
+                    A. My car, which is black and old, is parked outside.
+                </div>
+                <div class="option-box" data-q="q2" data-correct="false" onclick="checkPage3('q2', this, false)">
+                    B. My car which is black and old is parked outside.
+                </div>
+            </div>
+
+            <div class="sentence-pair">
+                <h4>3. 人物限定 (多位嫌疑犯)</h4>
+                <div class="option-box" data-q="q3" data-correct="true" onclick="checkPage3('q3', this, true)">
+                    A. The witnesses who told the truth were protected by the police.
+                </div>
+                <div class="option-box" data-q="q3" data-correct="false" onclick="checkPage3('q3', this, false)">
+                    B. The witnesses, who told the truth, were protected by the police.
+                </div>
+            </div>
+
+            <div class="sentence-pair">
+                <h4>4. 专有名词 (独一无二)</h4>
+                <div class="option-box" data-q="q4" data-correct="false" onclick="checkPage3('q4', this, false)">
+                    A. The famous detective Poirot who solved the case arrived yesterday.
+                </div>
+                <div class="option-box" data-q="q4" data-correct="true" onclick="checkPage3('q4', this, true)">
+                    B. The famous detective Poirot, who solved the case, arrived yesterday.
+                </div>
+            </div>
+
+            <div id="feedback-3" class="input-feedback" style="display: none;"></div>
+
+            <button class="button-next" id="next-page3" style="display: none;" onclick="goToPage(4)">
+                ✅ 掌握逗号规则，进入下一阶段：实战写作
+            </button>
+            
+            <div class="grammar-summary">
+                <h3>🔍 限制性 vs. 非限制性：再对比</h3>
+                <table class="summary-table">
+                    <tr>
+                        <th></th>
+                        <th>❌ 限制性 (定范围)</th>
+                        <th>⭕ 非限制性 (添补充)</th>
+                    </tr>
+                    <tr>
+                        <td>**逗号**</td>
+                        <td>**无逗号**</td>
+                        <td>**有逗号** (将从句括起来)</td>
+                    </tr>
+                    <tr>
+                        <td>**That**</td>
+                        <td>✅ 可用 That</td>
+                        <td>❌ 禁用 That</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+     
+        <div class="page" id="page4">
+            <header>
+                <h1>📝 侦探的笔迹：定语从句写作挑战</h1>
+                <p>📌 阶段四：小侦探写句子（无逗号与有逗号）</p>
+            </header>
+
+            <p class="instruction">
+                <strong>任务：</strong> 请根据线索和要求，完成句子中的定语从句部分。
+                <br>💡 注意：**限制性 (无逗号)** 需精确限定目标；**非限制性 (有逗号)** 需补充背景信息。
+            </p>
+
+            <div class="writing-area">
+                <h2>🖋️ 任务 1：限定文件 </h2>
+                <img src="files.png" alt="描述文件堆和其中一份关键文件" style="width:100%; margin-bottom: 15px; border-radius: 5px;"/>
+             
+                                 <textarea id="writing-q1" placeholder="提示：文件：files,用什么关系词，要不要加逗号"></textarea>
+                <button class="button-next" style="background-color: #0707ff; margin-top: 30px;" onclick="checkPage4('q1', 'Restrictive', ['that', 'which'])">提交 </button>
+                <div id="feedback-q1" class="input-feedback" style="display: none;"></div>
+            </div>
+
+            <div class="writing-area">
+                <h2>🖋️ 任务 2：描述死者的过去照片 </h2>
+                <img src="deadman.jpg" alt="描述这个死者男主人一个警察" style="width:100%; margin-bottom: 15px; border-radius: 5px;"/>
+                                <textarea id="writing-q2" placeholder="提示：穿着，长相，行为等,用什么关系词，要不要加逗号"></textarea>
+                <button class="button-next" style="background-color: #0707ff; margin-top: 30px;" onclick="checkPage4('q2', 'NonRestrictive', ['who'])">提交 </button>
+                <div id="feedback-q2" class="input-feedback" style="display: none;"></div>
+            </div>
+
+            <div class="writing-area">
+                <h2>🖋️ 任务 3：描述这个屋子 </h2>
+                <img src="house.jpg" alt="描述一栋普通的房子" style="width:100%; margin-bottom: 15px; border-radius: 5px;"/>
+                <p class="exercise-prompt">
+                    <strong>线索提示：</strong> 曾经住过的地方，曾经出过事的地方，曾经某个人发生过什么...<br>
+                   </p>
+                <textarea id="writing-q3" placeholder="标点和连接词要注意"></textarea>
+                <button class="button-next" style="background-color: #0707ff; margin-top: 30px;" onclick="checkPage4('q3', 'NonRestrictive', ['where'])">提交 (非限制性)</button>
+                <div id="feedback-q3" class="input-feedback" style="display: none;"></div>
+            </div>
+
+            <div class="writing-area">
+                <h2>🖋️ 任务 4：补充时间</h2>
+                <img src="time.jpg" alt="描述一个具体的年份或一个历史性事件" style="width:100%; margin-bottom: 15px; border-radius: 5px;"/>
+               <p class="exercise-prompt"><strong>线索提示：</strong> 1899年两人结婚的时候，发生了什么呢？<br>
+                    <strong>要求：</strong> 补充信息  </p>
+                <textarea id="writing-q4" placeholder="标点和连接词要注意"></textarea>
+                <button class="button-next" style="background-color:  #0707ff; margin-top: 30px;" onclick="checkPage4('q4', 'NonRestrictive', ['when'])">提交 </button>
+                <div id="feedback-q4" class="input-feedback" style="display: none;"></div>
+            </div>
+
+            <div class="writing-area">
+                <h2>🖋️ 任务 5：限定原因 </h2>
+                <img src="question.jpg" alt="描述一个问号和一个箭头的图案" style="width:100%; margin-bottom: 15px; border-radius: 5px;"/>
+                <p class="exercise-prompt">
+                    <strong>线索：</strong> ....的原因<br>
+                 </p>
+               
+                <textarea id="writing-q5" placeholder="例如：The reason why I was late was that I missed the bus.或者We wonder the reason why we should do so much homework"></textarea>
+                <button class="button-next" style="background-color: #5d5d81; margin-top: 10px;" onclick="checkPage4('q5', 'Restrictive', ['why', 'that'])">提交 </button>
+                <div id="feedback-q5" class="input-feedback" style="display: none;"></div>
+            </div>
+           
+           <button class="button-next" id="next-page4" onclick="goToPage(5)" >
+                ✅ 成功完成写作挑战，进入最终实战演练！
+            </button>
+        </div>
+        <div class="page" id="page5">
+            <header>
+                <h1>🔪 最终挑战：推理与语法并进</h1>
+                <p>📌 阶段五：实战演练 — 锁定真正的凶手</p>
+            </header>
+
+            <p class="instruction">
+                教学目标： 运用所学知识，判断给定定语从句的类型，并进行推理。
+            </p>
+
+            <img src="truth.png" alt="推理挑战卡" style="max-width: 100%; height: auto; display: block; margin: 15px auto; border-radius: 5px;"/>
+
+         <h2>判断任务 (选择：限制性 / 非限制性)</h2>
+            
+            <div id="card-A" class="analysis-box">
+                <h3>推理卡 A：The witness who saw the whole murder is now under police protection.</h3>
+                <div class="choice-pair">
+                    <div class="option-box" onclick="checkFinalCard('A', 'Restricting')">限制性 (Defining)</div>
+                    <div class="option-box" onclick="checkFinalCard('A', 'NonRestricting')">非限制性 (Non-Defining)</div>
+                </div>
+            </div>
+            
+            <div id="card-B" class="analysis-box">
+                <h3>推理卡 B：The victim's brother, who arrived late, was interviewed.</h3>
+                <div class="choice-pair">
+                    <div class="option-box" onclick="checkFinalCard('B', 'Restricting')">限制性 (Defining)</div>
+                    <div class="option-box" onclick="checkFinalCard('B', 'NonRestricting')">非限制性 (Non-Defining)</div>
+                </div>
+            </div>
+            
+            <div id="card-C" class="analysis-box">
+                <h3>推理卡 C：The house, which is very old, was built in 1920.</h3>
+                <div class="choice-pair">
+                    <div class="option-box" onclick="checkFinalCard('C', 'Restricting')">限制性 (Defining)</div>
+                    <div class="option-box" onclick="checkFinalCard('C', 'NonRestricting')">非限制性 (Non-Defining)</div>
+                </div>
+            </div>
+
+            <div id="card-D" class="analysis-box">
+                <h3>【最终定论】: This is the piece of jewelry that the mistress wore on that night.</h3>
+                <div class="choice-pair">
+                    <div class="option-box" onclick="checkFinalCard('D', 'Restricting')">限制性 (Defining)</div>
+                    <div class="option-box" onclick="checkFinalCard('D', 'NonRestricting')">非限制性 (Non-Defining)</div>
+                </div>
+            </div>
+        
+           <div id="feedback-5" class="input-feedback" style="display: none;"></div>
+
+            <div id="conan-reveal" style="text-align: center; color: #cc0000; font-size: 2em; margin-top: 20px; display: none;">
+                真相只有一个！
+            </div>
+            <audio id="conan-sound" src="conan.wav" preload="auto"></audio>
+            <button class="button-next" id="next-page5" style="display: none;" onclick="revealConan()">
+                  🎉 恭喜，你已成为语法侦探！
+                </button>
+        </div>
+    </div>
+    
+  <div id="notes-modal" class="notes-modal">
+    <div class="modal-content-container">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeNotesModal()">&times;</span>
+            <div class="note-header">
+                <h2>侦探笔记</h2>
+            </div>
+            <p><strong>已锁定潜在嫌疑人：</strong></p>
+            <ul class="note-list">
+                <li>Gardener (与线索1：湿泥土相关)</li>
+                <li>Mistress (与线索2：珍珠耳环相关)</li>
+                <li>Son (与线索4：玩具车轮子相关)</li>
+                <li>Chef (与线索3：油腻指纹相关)</li>
+            </ul>
+            <p style="margin-top: 20px; font-weight: bold; color: #a00;">下一步：进入审讯室，通过语法规则验证他们的证词！</p>
+            <button class="button-next" style="margin-top: 20px; background-color: #5d5d81;" onclick="closeNotesModal()">
+                前往审讯室 (下一页)
+            </button>
+        </div>
+    </div>
+  </div>
+
+
+  <script>
+    let currentPage = 1;
+    const totalPages = 5;
+    
+        // --- Page 5 柯南彩蛋触发函数 ---
+    function revealConan() {
+        const conanRevealText = document.getElementById('conan-reveal');
+        const conanSound = document.getElementById('conan-sound');
+
+        // 1. 显示“真相只有一个”
+        if (conanRevealText) {
+            conanRevealText.style.display = 'block';
+        }
+        
+        // 2. 播放柯南音效
+        if (conanSound) {
+            conanSound.currentTime = 0; 
+            conanSound.play().catch(error => {
+                // 浏览器可能会阻止自动播放，这里捕获错误
+                console.error("Audio play failed, possibly blocked by browser:", error);
+            });
+        }
+
+        // 3. 滚动到顶部，确保用户看到彩蛋
+        window.scrollTo(0, 0); 
+    }
+// --- Page 5 状态追踪 (确保答案为 R, N, N, R) ---
+    let page5Progress = {
+        'A': null, 
+        'B': null, 
+        'C': null, 
+        'D': null
+    };
+    // 答案序列: (R, N, N, R)
+    const page5Answers = {
+        'A': 'Restricting',    
+        'B': 'NonRestricting', 
+        'C': 'NonRestricting', 
+        'D': 'Restricting'     
+    };
+    
+    // Page 1 状态追踪 (多选)
+    let selectedSuspects = [];
+    const correctSuspects = ['Gardener', 'Mistress', 'Son', 'Chef'];
+
+    // Page 2 状态追踪 (4个嫌疑人)
+    let suspectProgress = {
+        mistress: false,
+        chef: false,
+        gardener: false,
+        son: false
+    };
+    let mistressCorrectCount = 0;
+    let chefCorrectCount = 0;
+    let gardenerCorrectCount = 0;
+    let sonCorrectCount = 0;
+    
+    // Page 3 状态追踪
+    let page3CorrectCount = 0;
+    const page3Answers = {
+        'q1': true, 
+        'q2': true, 
+        'q3': true, 
+        'q4': true  
+    };
+    let page3Progress = {
+        'q1': false,
+        'q2': false,
+        'q3': false,
+        'q4': false
+    };
+    
+    // --- Page 4 状态追踪 (统一为 Object) ---
+    let page4Progress = {
+        'q1': false,
+        'q2': false,
+        'q3': false,
+        'q4': false,
+        'q5': false
+    };
+
+    
+    // --- 放大镜效果函数 (保持不变) ---
+    let img;
+    let lens;
+    const zoomFactor = 2; // 放大倍数
+    let imgWidth, imgHeight, lensWidth, lensHeight;
+
+    function initializeMagnifier() {
+        img = document.getElementById('suspect-image');
+        lens = document.getElementById('magnifier-lens');
+
+        if (!img || !lens) return;
+
+        lensWidth = lens.offsetWidth;
+        lensHeight = lens.offsetHeight;
+        
+        const imgSrc = img.src; 
+        lens.style.backgroundImage = `url('${imgSrc}')`;
+
+        const area = document.querySelector('.magnifying-area');
+        area.addEventListener('mouseenter', showLens);
+        area.addEventListener('mouseleave', hideLens);
+        area.addEventListener('mousemove', moveLens);
+        
+        window.addEventListener('resize', () => {
+             if (lens.style.display === 'block') {
+                showLens(); 
+             }
+        });
+    }
+
+    function showLens() {
+        lens.style.display = 'block';
+        imgWidth = img.offsetWidth;
+        imgHeight = img.offsetHeight;
+        lens.style.backgroundSize = `${imgWidth * zoomFactor}px ${imgHeight * zoomFactor}px`;
+    }
+
+    function hideLens() {
+        lens.style.display = 'none';
+    }
+
+    function moveLens(e) {
+        if (lens.style.display === 'none') return;
+
+        const pos = img.getBoundingClientRect();
+        let x = e.clientX - pos.left;
+        let y = e.clientY - pos.top;
+
+        const offset = lensWidth / 2;
+        
+        x = Math.max(offset, Math.min(x, imgWidth - offset));
+        y = Math.max(offset, Math.min(y, imgHeight - offset));
+
+
+        const lensX = x - offset;
+        const lensY = y - offset;
+        lens.style.left = `${lensX}px`;
+        lens.style.top = `${lensY}px`;
+
+        let bgX = (x * zoomFactor) - offset;
+        let bgY = (y * zoomFactor) - offset;
+        
+        lens.style.backgroundPosition = `-${bgX}px -${bgY}px`;
+    }
+
+    // --- 塔罗牌翻转函数 ---
+    function flipCard(card) {
+        card.classList.toggle('flipped');
+    }
+    
+ // --- 模态框函数 (已修正：添加了 null 检查) ---
+function showNotesModal() {
+    const modal = document.getElementById('notes-modal');
+    if (modal) {
+        modal.style.display = 'block';
+    } else {
+        // 建议：检查HTML中是否存在 <div id="notes-modal">...</div>
+        console.error("Error: Modal element with ID 'notes-modal' not found.");
+    }
+}
+
+function closeNotesModal() {
+    const modal = document.getElementById('notes-modal');
+    if (modal) {
+        modal.style.display = 'none';
+        goToPage(2);
+    } else {
+        console.error("Error: Modal element with ID 'notes-modal' not found.");
+    }
+}
+
+    // --- 页面控制函数 (无更改) ---
+    function goToPage(pageNumber) {
+        // 确保不会因为意外调用导致 Page 2 的逻辑提前触发
+        if (document.getElementById('notes-modal').style.display === 'block' && pageNumber === 2) return; 
+
+        document.getElementById(`page${currentPage}`).classList.remove('active');
+        currentPage = pageNumber;
+        document.getElementById(`page${currentPage}`).classList.add('active');
+        window.scrollTo(0, 0); 
+        document.querySelectorAll('.option-box').forEach(box => {
+            box.classList.remove('selected', 'correct', 'incorrect');
+        });
+        document.querySelectorAll('.input-feedback').forEach(f => f.style.display = 'none');
+    }
+    
+    // --- Page 1 Logic (保持不变) ---
+    function toggleSelection(suspectId) {
+        const element = document.querySelector(`.option-box[data-id="${suspectId}"]`);
+        const index = selectedSuspects.indexOf(suspectId);
+        
+        document.getElementById('feedback-1').style.display = 'none';
+        document.querySelectorAll('.suspect-grid .option-box').forEach(box => {
+            box.classList.remove('correct', 'incorrect');
+        });
+
+
+        if (index > -1) {
+            selectedSuspects.splice(index, 1);
+            element.classList.remove('selected');
+        } else if (selectedSuspects.length < 4) {
+            selectedSuspects.push(suspectId);
+            element.classList.add('selected');
+        } else {
+            const feedback = document.getElementById(`feedback-1`);
+            feedback.textContent = "🔍 侦探：你最多只能选择4名潜在嫌疑犯！";
+            feedback.style.backgroundColor = '#ffcccc';
+            feedback.style.display = 'block';
+            return;
+        }
+
+        checkPage1Completion();
+    }
+
+    function checkPage1Completion() {
+        const nextButton = document.getElementById(`next-page1`);
+        const feedback = document.getElementById(`feedback-1`);
+        const isFourSelected = selectedSuspects.length === 4;
+        
+        const sortedSelected = [...selectedSuspects].sort();
+        const sortedCorrect = [...correctSuspects].sort();
+        
+        let allCorrect = isFourSelected && 
+                         sortedSelected.length === sortedCorrect.length &&
+                         sortedSelected.every((value, index) => value === sortedCorrect[index]);
+        
+        if (isFourSelected) {
+             if (allCorrect) {
+                feedback.textContent = "✅ 正确锁定！这四名嫌疑犯（园丁、女主人、孩子、厨师）的定语从句都提供了直接联系线索的关键信息！";
+                feedback.style.backgroundColor = '#ccffcc';
+                feedback.style.display = 'block';
+                nextButton.style.display = 'block';
+                document.querySelectorAll('.suspect-grid .option-box').forEach(box => {
+                     const id = box.getAttribute('data-id');
+                     box.classList.remove('selected');
+                     if (correctSuspects.includes(id)) {
+                         box.classList.add('correct');
+                     } else {
+                         box.classList.add('incorrect');
+                     }
+                });
+
+            } else {
+                feedback.textContent = "❌ 锁定失败。你选择的4名嫌疑犯中，有人与线索无关，请根据定语从句提供的限定信息重新分析！";
+                feedback.style.backgroundColor = '#ffcccc';
+                nextButton.style.display = 'none';
+                 document.querySelectorAll('.suspect-grid .option-box').forEach(box => {
+                    box.classList.remove('correct', 'incorrect');
+                });
+            }
+        } else {
+            nextButton.style.display = 'none';
+            feedback.style.display = 'none';
+        }
+    }
+    
+    // --- Page 2 Logic (保持不变) ---
+    function checkTestimony(suspect, choice, isCorrect) {
+        const feedback = document.getElementById(`feedback-${suspect}`);
+        
+        const card = document.getElementById(`testimony-${suspect}`);
+        const buttons = card.querySelectorAll(`.choice-btn`);
+        buttons.forEach(btn => {
+            if (btn.textContent.trim().startsWith(choice + '.')) {
+                btn.classList.remove('correct-answer', 'wrong-answer');
+                btn.classList.add(isCorrect ? 'correct-answer' : 'wrong-answer');
+            }
+        });
+
+
+        if (isCorrect) {
+            let currentCount = 0;
+            if (suspect === 'mistress' && (choice === 'B' || choice === 'C')) currentCount = ++mistressCorrectCount;
+            if (suspect === 'chef' && (choice === 'A' || choice === 'D')) currentCount = ++chefCorrectCount;
+            if (suspect === 'gardener' && (choice === 'B' || choice === 'C')) currentCount = ++gardenerCorrectCount;
+            if (suspect === 'son' && (choice === 'A' || choice === 'D')) currentCount = ++sonCorrectCount;
+            
+            if (currentCount > 2) {
+                if (suspect === 'mistress') mistressCorrectCount = 2;
+                if (suspect === 'chef') chefCorrectCount = 2;
+                if (suspect === 'gardener') gardenerCorrectCount = 2;
+                if (suspect === 'son') sonCorrectCount = 2;
+                currentCount = 2; 
+            }
+
+
+            feedback.textContent = "✅ 分析正确！这是一句语法正确的真话。";
+            feedback.style.backgroundColor = '#d4edda';
+            feedback.style.color = '#155724';
+            
+            if (currentCount >= 2) {
+                if (suspect === 'mistress') revealNextSuspect('chef');
+                else if (suspect === 'chef') revealNextSuspect('gardener');
+                else if (suspect === 'gardener') revealNextSuspect('son');
+                else if (suspect === 'son') revealNextSuspect('finish');
+            }
+        } else {
+            feedback.textContent = "❌ 这是一个‘语法谎言’！请检查逗号的使用规则：明确对象加逗号，模糊对象不加，Why永远不加。";
+            feedback.style.backgroundColor = '#f8d7da';
+            feedback.style.color = '#721c24';
+        }
+        feedback.style.display = 'block';
+    }
+
+    function revealNextSuspect(nextSuspectId) {
+        if (nextSuspectId === 'finish') {
+            document.getElementById('page2-summary').style.display = 'block';
+            document.getElementById('next-page2').style.display = 'block';
+            window.scrollTo(0, document.body.scrollHeight);
+        } else {
+            setTimeout(() => {
+                document.getElementById(`testimony-${nextSuspectId}`).style.display = 'block';
+                document.getElementById(`testimony-${nextSuspectId}`).scrollIntoView({behavior: "smooth"});
+            }, 1000);
+        }
+    }
+    
+    // --- Page 3 Logic (保持不变) ---
+    function checkPage3(qId, element, isCorrect) {
+        const feedback = document.getElementById('feedback-3');
+        const questionElement = element.closest('.sentence-pair');
+
+        questionElement.querySelectorAll('.option-box').forEach(box => {
+            box.classList.remove('correct', 'incorrect');
+        });
+
+        element.classList.add(isCorrect ? 'correct' : 'incorrect');
+
+        if (isCorrect) {
+            if (!page3Progress[qId]) {
+                page3Progress[qId] = true;
+                page3CorrectCount++;
+            }
+            
+            feedback.textContent = `✅ ${qId.toUpperCase()} 分析正确！${element.textContent.trim()} 是正确的用法。`;
+            feedback.style.backgroundColor = '#d4edda';
+            feedback.style.display = 'block';
+        } else {
+            questionElement.querySelectorAll(`.option-box[data-q="${qId}"][data-correct="true"]`).forEach(box => {
+                box.classList.add('correct');
+            });
+            
+            feedback.textContent = `❌ ${qId.toUpperCase()} 判断错误！请记住：限制性信息（不可或缺）**不用**逗号，补充信息（可省略）**要用**逗号！`;
+            feedback.style.backgroundColor = '#f8d7da';
+            feedback.style.display = 'block';
+            page3Progress[qId] = false; 
+            page3CorrectCount = Object.values(page3Progress).filter(p => p).length; 
+        }
+
+        if (page3CorrectCount === Object.keys(page3Answers).length) {
+            document.getElementById('next-page3').style.display = 'block';
+        } else {
+            document.getElementById('next-page3').style.display = 'none';
+        }
+    }
+    
+    // --- Page 4 辅助函数 (已修改：使用 page4Progress) ---
+    function checkPage4CompletionStatus() {
+        const allCompleted = Object.values(page4Progress).every(p => p);
+        const nextButton = document.getElementById('next-page4');
+        
+        // 找到或创建全局完成反馈框
+        let completeFeedback = document.getElementById('feedback-4-completion');
+        if (!completeFeedback) {
+             completeFeedback = document.createElement('div');
+             completeFeedback.id = 'feedback-4-completion';
+             completeFeedback.className = 'input-feedback';
+             // 插入到 Page 4 容器中，在 Next 按钮之前
+             const page4Container = document.getElementById('page4');
+             if(page4Container && nextButton) {
+                 page4Container.insertBefore(completeFeedback, nextButton);
+             }
+        }
+
+        if (allCompleted) {
+             completeFeedback.textContent = "🎉 完美！你已经掌握了所有定语从句类型和关系词的写作技巧。";
+             completeFeedback.style.backgroundColor = '#ccffcc';
+             completeFeedback.style.display = 'block';
+             nextButton.style.display = 'block';
+        } else {
+             completeFeedback.style.display = 'none';
+             nextButton.style.display = 'none';
+        }
+    }
+
+    // --- Page 4 Logic (已修改：使用 page4Progress) ---
+    function checkPage4(qId, type, requiredWords) {
+        const textarea = document.getElementById(`writing-${qId}`);
+        const feedback = document.getElementById(`feedback-${qId}`);
+        const text = textarea.value.trim();
+        let isPass = false;
+        let failMessage = "";
+
+        // 默认状态为失败
+        page4Progress[qId] = false;
+        
+        if (text.length < 5) {
+             feedback.textContent = "🔍 侦探：请写一个更完整的从句。";
+             feedback.style.backgroundColor = '#ffcccc';
+             feedback.style.display = 'block';
+             checkPage4CompletionStatus(); 
+             return;
+        }
+        
+        const lowerText = text.toLowerCase();
+        
+        // 1. 检查是否使用了正确的关系词
+        const usedRequiredWord = requiredWords.some(word => lowerText.includes(word));
+        
+        if (!usedRequiredWord) {
+            failMessage = `❌ 关系词错误！请使用要求的关系词：${requiredWords.join(' 或 ')}。`;
+        } else {
+            // 2. 检查逗号用法
+            const hasComma = lowerText.includes(',');
+            
+            if (type === 'Restrictive') {
+                // 限制性：不能有逗号 (特殊处理 Q5 的 that/why)
+                if (hasComma) {
+                    // 允许逗号存在于句内，但不允许出现在开始或结束（即作为从句分隔符）
+                    if (text.startsWith(',') || text.endsWith(',') || (qId === 'q5' && hasComma)) {
+                         failMessage = "❌ 限制性从句错误！限定性信息**不可**用逗号隔开！";
+                    } else {
+                         isPass = true;
+                    }
+                } else {
+                    isPass = true;
+                }
+            } else if (type === 'NonRestrictive') {
+                // 非限制性：必须有逗号，且禁用 that
+                
+                if (lowerText.includes('that')) {
+                    failMessage = "❌ 非限制性从句错误！不能使用 that！";
+                } else if (!text.startsWith(',') || !text.endsWith(',')) {
+                    failMessage = "❌ 非限制性从句错误！请使用**逗号**将补充信息括起来！ (例如： , who is wealthy, )";
+                } else {
+                    isPass = true;
+                }
+            }
+        }
+
+        // 3. 结果处理
+        if (isPass) {
+            page4Progress[qId] = true;
+            feedback.textContent = `✅ ${type === 'Restrictive' ? '限制性' : '非限制性'} 从句：写作成功！你的句子语法结构正确。`;
+            feedback.style.backgroundColor = '#ccffcc';
+        } else {
+            feedback.textContent = failMessage;
+            feedback.style.backgroundColor = '#ffcccc';
+        }
+        feedback.style.display = 'block';
+        
+        // 检查全部完成状态
+        checkPage4CompletionStatus();
+    }
+    
+// --- Page 5 Logic (最终版本：使用位置索引解决反转问题) ---
+    function checkFinalCard(cardId, userChoice) {
+        const cardElement = document.getElementById(`card-${cardId}`);
+        const feedbackElement = document.getElementById('feedback-5');
+        
+        const actualAnswer = page5Answers[cardId];
+        const isCorrect = userChoice === actualAnswer;
+        
+        // 1. 设置状态变量
+        page5Progress[cardId] = isCorrect; 
+
+        // 2. 识别并清除所有选项的状态
+        let clickedBox = null;
+        let otherBox = null;
+
+        const allBoxes = cardElement.querySelectorAll('.option-box');
+
+        allBoxes.forEach((box, index) => {
+            // 假设：索引 0 (左侧) 永远是 Restricting，索引 1 (右侧) 永远是 NonRestricting
+            const boxChoiceFromIndex = index === 0 ? 'Restricting' : 'NonRestricting';
+            
+            // 清除所有前一状态
+            box.classList.remove('selected', 'correct', 'incorrect');
+            
+            if (boxChoiceFromIndex === userChoice) {
+                clickedBox = box; // 找到用户点击的元素
+            } else {
+                otherBox = box; // 找到另一个元素
+            }
+        });
+        
+        // 3. 应用颜色逻辑 (确保互斥)
+        if (clickedBox) {
+            clickedBox.classList.add('selected'); // 标记为选中
+            
+            if (isCorrect) {
+                // 情况 1: 用户选对了
+                clickedBox.classList.add('correct'); // 选中的变绿
+            } else {
+                // 情况 2: 用户选错了
+                clickedBox.classList.add('incorrect'); // 选中的变红
+                if (otherBox) {
+                    otherBox.classList.add('correct'); // 正确答案变绿
+                }
+            }
+        }
+        
+        // 4. 检查全局完成状态
+        const allCardsAttempted = Object.values(page5Progress).every(val => val !== null);
+        const allCorrect = Object.values(page5Progress).every(val => val === true);
+        const nextButton = document.getElementById('next-page5');
+
+        if (allCardsAttempted) {
+            if (allCorrect) {
+                feedbackElement.textContent = "🎉 恭喜你！所有推理卡的定语从句类型判断完全正确！你已经掌握了定语从句的精髓！";
+                feedbackElement.style.backgroundColor = '#ccffcc';
+                nextButton.style.display = 'block';
+            } else {
+                feedbackElement.textContent = "🤔 还有一些判断需要修正！请重新分析逗号和先行词在句中起到的作用。";
+                feedbackElement.style.backgroundColor = '#ffcccc';
+                nextButton.style.display = 'none';
+            }
+            feedbackElement.style.display = 'block';
+        } else {
+            // 单个卡片的反馈
+            if (page5Progress[cardId] !== null) {
+                 feedbackElement.style.display = 'block';
+                 feedbackElement.textContent = isCorrect ? "✅ 正确！请继续下一张推理卡。" : "❌ 错误！请注意逗号是否将从句与核心名词隔开。";
+                 feedbackElement.style.backgroundColor = isCorrect ? '#d4edda' : '#f8d7da';
+            } else {
+                feedbackElement.style.display = 'none';
+            }
+            nextButton.style.display = 'none';
+        }
+    }
+
+
+    // --- 页面初始化和柯南彩蛋功能 ---
+    window.onload = function() {
+        // ... (您的现有初始化代码，如 goToPage('page1')) ...
+
+    };
+    // 初始化放大镜
+    window.onload = initializeMagnifier;
+    </script>
+</body>
+</html>
